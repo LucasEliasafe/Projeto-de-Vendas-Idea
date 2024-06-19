@@ -1,7 +1,11 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class SalesManager {
     private Map<String, Product> productCatalog;
@@ -22,6 +26,7 @@ public class SalesManager {
 
     public void createSale(Sale sale) {
         sales.add(sale);
+        saveSaleToFile(sale);
     }
 
     public void showSales() {
@@ -30,26 +35,71 @@ public class SalesManager {
         }
     }
 
+    private void saveSaleToFile(Sale sale) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("sales.txt", true))) {
+            writer.write(sale.toString());
+            writer.newLine();
+        } catch (IOException e) {
+            System.err.println("Erro ao salvar venda no arquivo: " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
         SalesManager manager = new SalesManager();
+        Scanner scanner = new Scanner(System.in);
 
         // Adding products to the catalog
         manager.addProductToCatalog(new Product("001", "Laptop", 1200.00));
         manager.addProductToCatalog(new Product("002", "Smartphone", 800.00));
         manager.addProductToCatalog(new Product("003", "Tablet", 300.00));
 
-        // Creating a sale
-        Sale sale1 = new Sale();
-        sale1.addProduct(manager.getProductFromCatalog("001"));
-        sale1.addProduct(manager.getProductFromCatalog("002"));
-        manager.createSale(sale1);
+        boolean running = true;
 
-        // Creating another sale
-        Sale sale2 = new Sale();
-        sale2.addProduct(manager.getProductFromCatalog("003"));
-        manager.createSale(sale2);
+        while (running) {
+            System.out.println("1. Criar venda");
+            System.out.println("2. Mostrar vendas");
+            System.out.println("3. Sair");
+            System.out.print("Escolha uma opção: ");
 
-        // Showing all sales
-        manager.showSales();
+            int option = scanner.nextInt();
+            scanner.nextLine();  // Consumir nova linha
+
+            switch (option) {
+                case 1:
+                    Sale sale = new Sale();
+                    boolean addingProducts = true;
+
+                    while (addingProducts) {
+                        System.out.print("Digite o ID do produto (ou 'sair' para finalizar): ");
+                        String productId = scanner.nextLine();
+
+                        if (productId.equalsIgnoreCase("sair")) {
+                            addingProducts = false;
+                        } else {
+                            Product product = manager.getProductFromCatalog(productId);
+                            if (product != null) {
+                                sale.addProduct(product);
+                                System.out.println("Produto adicionado: " + product.getName());
+                            } else {
+                                System.out.println("Produto não encontrado.");
+                            }
+                        }
+                    }
+
+                    manager.createSale(sale);
+                    System.out.println("Venda criada: " + sale);
+                    break;
+                case 2:
+                    manager.showSales();
+                    break;
+                case 3:
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+            }
+        }
+
+        scanner.close();
     }
 }

@@ -1,0 +1,1 @@
+Sale{products=[], total=0.0}
